@@ -2,7 +2,9 @@
 
 Jinqiao Li 
 
-Supervise: Ann-Sophie, Simon
+Supervise: Ann-Sophie Gnehm, Simon Clematide
+
+Professor: Martin Volk
 
 ## Files Description
 
@@ -21,4 +23,7 @@ Input file: onet_occ_tasks_workactivities_en.jsonl
 
 Output file: onet_occ_tasks_workactivities_en2de_deepl.jsonl
 
+### Models
+- `baseline.ipynb`
+- `model_measurement.ipynb`
 
