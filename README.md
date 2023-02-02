@@ -3,3 +3,22 @@
 Jinqiao Li 
 
 Supervise: Ann-Sophie, Simon
+
+## Files Description
+
+### Data
+
+- `data_process.ipynb`
+Merged all the  relevant data. extened mappings relationships from 'task to DWA' to IWA and GWA. Also merged the English version and German version (SJMM tranlated).
+
+- `stat.ipynb`
+Some statistical analysis on the data used for later training and test.
+
+- `DeepL.ipynb`
+Translated original English data to German with DeeL API (formal).
+
+Input file: onet_occ_tasks_workactivities_en.jsonl
+
+Output file: onet_occ_tasks_workactivities_en2de_deepl.jsonl
+
+
