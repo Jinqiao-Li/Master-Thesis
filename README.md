@@ -10,6 +10,9 @@ Professor: Martin Volk
 
 ### Data
 
+- `task_train.csv` `task_val.csv` `task_test.csv`
+These are the data used for training, validation and test
+
 - `data_process.ipynb`
 Merged all the  relevant data. extened mappings relationships from 'task to DWA' to IWA and GWA. Also merged the English version and German version (SJMM tranlated).
 
