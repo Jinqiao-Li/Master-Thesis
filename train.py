@@ -191,6 +191,53 @@ def encode_sentences(tokenizer, source_sentences, target, labelEncoder,
 
     return batch
 
+MAX_LENGTH = 64
+def get_prediction(model,tokenizer,text, top_n: int=5):
+    # prepare our text into tokenized sequence
+    inputs = tokenizer(text, padding=True, truncation=True, max_length=MAX_LENGTH, return_tensors="pt")
+    # perform inference to our model
+    logits = model(**inputs).logits
+    # get output probabilities by doing softmax
+    # sigmoid for multi-label
+    probs = logits[0].softmax(0)
+    
+    #get the top_n candidates and corresponding prob as score
+    value, indices = probs.topk(top_n, sorted=True)
+    # results = [(id_.item(),round(val.item(),4)) for val,id_ in zip(value[0], indices[0])]
+    results = [(id_.item(),round(val.item(),4)) for val,id_ in zip(value, indices)]
+    results = [j for item in results for j in item ]
+    return results
+
+def apply_classify_on_df(model,tokenizer,df):
+    """
+    Apply a function and return multiple values so that you can create multiple columns, return a pd.Series with the values instead:
+    Source: https://queirozf.com/entries/pandas-dataframes-apply-examples
+    """
+    df[['pred_la1','la1score','pred_la2','la2score','pred_la3','la3score','pred_la4','la4score','pred_la5','la5score']] = df.apply(lambda row: pd.Series(get_prediction(model,tokenizer,row.loc['Task_de'])), axis=1)
+    return df
+
+def model_pred(model_path, checkpoint, name):
+    
+    tokenizer = AutoTokenizer.from_pretrained(model_path) 
+    model =  AutoModelForSequenceClassification.from_pretrained(model_path, num_labels=gwa_labels)
+    relod_model = LitModel.load_from_checkpoint(checkpoint_path=checkpoint,
+                                             learning_rate=2e-5, tokenizer=tokenizer, model= model)
+    
+    relod_model.eval()
+    print(model_path, "MODEL reloaded from checkpoint: {0} !".format(checkpoint))
+    
+    pred_df = apply_classify_on_df(relod_model,tokenizer,test_df)
+    
+    pred_df['pred_la1'] = y_encoded.inverse_transform(pred_df['pred_la1'].astype(int)).tolist()
+    pred_df['pred_la2'] = y_encoded.inverse_transform(pred_df['pred_la2'].astype(int)).tolist()
+    pred_df['pred_la3'] = y_encoded.inverse_transform(pred_df['pred_la3'].astype(int)).tolist()
+    pred_df['pred_la4'] = y_encoded.inverse_transform(pred_df['pred_la4'].astype(int)).tolist()
+    pred_df['pred_la5'] = y_encoded.inverse_transform(pred_df['pred_la5'].astype(int)).tolist()
+    
+    # save m1 gbert model's predicted result
+    outfile = 'de_pred_test_0305/' + name + '.csv'
+    pred_df.to_csv(outfile, header=True)
+    
 
 # hyperparameters
 gwa_labels=37
@@ -207,8 +254,7 @@ batch_size = 16
 german_model = "deepset/gbert-base" 
 job_model = "agne/jobGBERT"
 multilingual_model = "bert-base-multilingual-cased" 
-multi_job = '/srv/scratch2/jinq/model_ep_30'
-
+multi_job_model = '/srv/scratch2/jinq/model_ep_30'
 
 path = '/srv/scratch2/jinq/taskontology/task_to_ALL_DE.csv'
 train_file = '/srv/scratch2/jinq/taskontology/task_train.csv'
@@ -217,22 +263,28 @@ test_file = '/srv/scratch2/jinq/taskontology/task_test.csv'
 root_dir = "/srv/scratch2/jinq/"
 base_dir = root_dir + 'trained_models/'
 
-# delect the model and classification level (the only chaging part)
-model_path = job_model
-num_label_level = gwa_labels
+data_df = pd.read_csv(path, index_col=0)
+test_df = pd.read_csv(test_file, index_col=0)
+# encoding labels
+y_encoded = LabelEncoder().fit(data_df['GWA Title'])
 
+# delect the model and classification level (the only chaging part)
+model_path = german_model
+num_label_level = gwa_labels
 
 # Load the tokenizer
 tokenizer = AutoTokenizer.from_pretrained(model_path) 
 model =  AutoModelForSequenceClassification.from_pretrained(model_path, num_labels=num_label_level)
 
-
+# Pytorch lightening model
 summary_data = DataModule(tokenizer, train_file=train_file, test_file=test_file, val_file=val_file,
                                  batch_size = batch_size, task='Task_de', y_level='GWA_de')
 model = LitModel(learning_rate = learning_rate, tokenizer = tokenizer, model = model)
 
 # main
 if __name__=="__main__":
+    
+    print(model_path+'is training! ')
     
     checkpoint = ModelCheckpoint(
         save_last=True )
@@ -253,4 +305,6 @@ if __name__=="__main__":
     # Fit the instantiated model to the data
     trainer.fit(model, summary_data)
     print('path of best model:', trainer.checkpoint_callback.best_model_path)
-    trainer.save_checkpoint('de_trained_models/0305/job_model.ckpt')
+    trainer.save_checkpoint('de_trained_models/0305/german_model.ckpt')
+    
+    model_pred(model_path, trainer.checkpoint_callback.best_model_path, 'german_model')
