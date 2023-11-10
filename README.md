@@ -16,11 +16,14 @@ Secondly, state-of-the-art models (TextRNN, TextRCNN, HMCN, HiAGM) were used as 
 
 Furthermore, the best model configurations from both series of experiments are selected to predict job advertisement data, resulting in reliable classification using the O*NET hierarchical ontology. Human post-evaluation, conducted by a German-speaking domain expert, validates the accuracy of the models' predictions. Overall, while this project extensively tested the feasibility of hierarchy-aware classification models, the transformer-based flat model Job-GBERT proves to be a more suitable option for the hierarchical classification of Job Ads data, given its specificity.
 
-An example of the task:Review and analyze legislation, laws, or public policy and recommend changes to promote or support interests of the general population or special group. 
+An example of the task:
 
-![image]([picture or gif url](https://github.com/Jinqiao-Li/Master-Thesis/blob/main/gwa.png))
+*Task: Review and analyze legislation, laws, or public policy and recommend changes to promote or support interests of the general population or special group.*
 
+![image](https://github.com/Jinqiao-Li/Master-Thesis/blob/main/gwa.png)
 
+### Experiment Pipeline
+![image](https://github.com/Jinqiao-Li/Master-Thesis/blob/main/experimental%20pipline.png)
 
 ### Data
 
